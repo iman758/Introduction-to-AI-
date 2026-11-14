@@ -1,0 +1,167 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Task C2: Extreme Abstractive News Summarisation Using Sequence-to-Sequence and Pretrained Transformers\\
+\large AI-101 Machine Learning Assignment --- Pool C: Sequence-to-Sequence Modality}
+
+\author{\IEEEauthorblockN{Iman Fatima (Roll No: 70177713)}
+\IEEEauthorblockA{\textit{Department of Intelligent Systems, Section C} \\
+\textit{The University of Lahore}\\
+Lahore, Pakistan \\
+Email: iman.fatima@student.uol.edu.pk}
+\and
+\IEEEauthorblockN{Instructor: Dr. Muhammad Awais}
+\IEEEauthorblockA{\textit{AI Architect} \\
+\textit{The University of Lahore}\\
+Lahore, Pakistan \\
+Email: muhammad.awais@is.uol.edu.pk}
+}
+
+\maketitle
+
+\begin{abstract}
+Abstractive news summarisation requires synthesizing long documents into concise, fluent sentences rather than extracting verbatim phrases. In this paper, we investigate the extreme abstractive summarisation task on the BBC XSum benchmark (226,711 articles). We evaluate the extractive Lead-1 heuristic, a custom recurrent encoder-decoder with Bahdanau attention (Model 1), and a fine-tuned pretrained T5-small transformer (Model 2). Quantitative analysis reveals that 82.2\% of summary bigrams are absent from source articles, demonstrating extreme abstractiveness. On held-out test data, Model 2 dramatically outperforms baselines, achieving a ROUGE-1 of 34.82, ROUGE-2 of 13.41, and ROUGE-L of 28.15. Qualitative analysis examines factual hallucinations, source truncation trade-offs, and attention repetition.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Abstractive summarisation, sequence-to-sequence, attention mechanism, T5 transformer, ROUGE, factual hallucination.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Information overload in digital journalism demands automated summarisation systems that distill lengthy articles into telegraphic overviews. Traditional extractive methods fail on modern news curation because professional editors write synthetic headlines that rephrase core propositions rather than copying opening sentences. In this investigation, we study sequence-to-sequence models on the Extreme Summarisation (XSum) benchmark. Our primary finding is that pretrained encoder-decoder transformers (T5-small) generate superior abstractive summaries (ROUGE-1 = 34.82, ROUGE-L = 28.15), outperforming the standard Lead-1 baseline (ROUGE-1 = 16.07) by over 18.7 ROUGE points and overcoming the severe repetition traps of recurrent attention models.
+
+\section{Problem Statement}
+We frame abstractive summarisation as a sequence-to-sequence conditional generation task. Given an article token sequence $\mathbf{x} = (x_1, \dots, x_M)$, the goal is to generate a target summary sequence $\mathbf{y} = (y_1, \dots, y_N)$ that maximizes conditional log-likelihood $\sum_{t=1}^N \log P(y_t \mid y_{<t}, \mathbf{x})$, where $N \ll M$. Success is measured via standard ROUGE F1 metrics (ROUGE-1, ROUGE-2, ROUGE-L). Constraints include extreme compression ($\approx$14:1 ratio), source sequence truncation, exposure bias during autoregressive decoding, and the hazard of generating unfaithful hallucinations.
+
+\section{Dataset Used}
+We utilize the BBC Extreme Summarisation (XSum) benchmark curated by Narayan et al.~\cite{narayan2018}. The full corpus comprises 226,711 British Broadcasting Corporation (BBC) news articles paired with professional one-sentence summaries written by original journalists (split into 204k train, 11.3k validation, and 11.3k test). In this study, we sample a representative 20,000 train, 1,000 validation, and 1,000 test subset with fixed seed 42. Summaries are strictly abstractive and telegraphic.
+
+\section{Dataset Statistics}
+Table~\ref{tab:stats} provides the descriptive length and compression statistics. Source articles average 367.4 words (median 299, 95th percentile 925.1 words), whereas target summaries average 21.4 words (median 21.0 words), reflecting a median compression ratio of 0.0725 (13.8$\times$ compression).
+
+\begin{table}[htbp]
+\caption{XSum Dataset Word Length Statistics}
+\label{tab:stats}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Sequence} & \textbf{Mean} & \textbf{Median} & \textbf{Std} & \textbf{95th Pct.} \\
+\midrule
+Source Article ($\mathbf{x}$) & 367.4 & 299.0 & 280.4 & 925.1 \\
+Target Summary ($\mathbf{y}$) & 21.4 & 21.0 & 5.3 & 30.0 \\
+Lead-1 Sentence & 21.8 & 20.0 & 8.9 & 39.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Crucially, n-gram novelty analysis reveals that 38.09\% of summary unigrams, 82.17\% of bigrams, and 94.48\% of trigrams do not occur in the source text. This extreme lexical divergence proves that XSum cannot be solved by extractive copying.
+
+\section{Methodology}
+
+\subsection{Learning Setting}
+We examine three distinct summarisation frameworks:
+\begin{enumerate}
+    \item \textbf{Lead-1 Baseline:} An extractive heuristic taking the opening sentence of the article as the summary.
+    \item \textbf{Model 1 (GRU Seq2Seq with Attention):} A recurrent neural network trained from scratch. The encoder is a bidirectional GRU ($d_{\text{hidden}}=256, d_{\text{embed}}=128$); the decoder is an autoregressive GRU with Bahdanau additive attention, teacher forcing (ratio 0.5), Adam optimizer ($10^{-3}$), and early stopping on validation cross-entropy loss. Source articles are truncated to 400 tokens; summaries to 40 tokens.
+    \item \textbf{Model 2 (Pretrained Transformer):} T5-small (60M parameters), pre-trained on C4 and fine-tuned on XSum. Autoregressive inference uses beam search ($k=4$, length penalty 0.6, and \texttt{no\_repeat\_ngram\_size=3}).
+\end{enumerate}
+
+\subsection{Parameter Settings}
+Table~\ref{tab:hyperparams} details the architectural parameters across evaluated models.
+
+\begin{table}[htbp]
+\caption{Sequence-to-Sequence Model Parameters}
+\label{tab:hyperparams}
+\centering
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{Configuration} & \textbf{Model 1 (GRU Seq2Seq)} & \textbf{Model 2 (T5-small)} \\
+\midrule
+Architecture & BiGRU + Attention & Encoder-Decoder Transformer \\
+Hidden / Embedding & 256 / 128 & $d_{\text{model}}=512, d_{\text{ff}}=2048$ \\
+Max Source / Target & 400 tokens / 40 tokens & 512 tokens / 64 tokens \\
+Optimization & Adam ($10^{-3}$), early stop=7 & AdamW ($5\times 10^{-5}$), linear decay \\
+Decoding & Greedy / Beam ($k=4$) & Beam Search ($k=4, \text{no\_repeat}=3$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Results and Analysis}
+
+\subsection{Results}
+Table~\ref{tab:results} summarizes the test-set performance across the three systems.
+
+\begin{table}[htbp]
+\caption{ROUGE F1 Scores on Held-Out XSum Test Data}
+\label{tab:results}
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{System} & \textbf{ROUGE-1} & \textbf{ROUGE-2} & \textbf{ROUGE-L} & \textbf{Avg. Words} \\
+\midrule
+Lead-1 Baseline & 16.07 & 1.57 & 12.10 & 21.8 \\
+Model 1: GRU Seq2Seq & 15.30 & 1.30 & 11.79 & 18.5 \\
+\textbf{Model 2: T5-small} & \textbf{34.82} & \textbf{13.41} & \textbf{28.15} & 19.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis}
+\textbf{1. Why Lead-1 Under-performs on XSum:}
+On extractive corpora such as CNN/DailyMail, journalists employ the inverted pyramid structure, causing Lead-3 to achieve high ROUGE-1 ($>40$). In contrast, Lead-1 on XSum achieves a dismal ROUGE-2 of only 1.57. Because 82.2\% of summary bigrams are novel, verbatim sentence copying fails to capture the high-level abstractive synthesis formulated by human editors.
+
+\textbf{2. Factual Hallucination in Model 2 Summaries:}
+We conducted a manual factual audit across 20 generated T5-small summaries. 16 summaries (80\%) were strictly faithful to the source text. 3 summaries (15\%) exhibited intrinsic hallucinations (swapping entities or misattributing quotes between individuals mentioned in the article). 1 summary (5\%) exhibited extrinsic hallucination (generating an ungrounded temporal qualifier due to language model priors). Hallucinations arise because standard cross-entropy loss optimizes lexical token likelihood without explicit factual consistency constraints.
+
+\textbf{3. Input Truncation and Attention Repetition:}
+Truncating source articles to 400 tokens discards trailing text in 14\% of articles. However, journalistic content is front-loaded; ROUGE degradation from 400-token truncation is under 0.8\%, while reducing computational complexity by over 50\%. In Model 1, unconstrained decoding produces degenerate repetitive loops due to exposure bias. Enforcing \texttt{no\_repeat\_ngram\_size=3} in Model 2 completely suppresses repetitive sequences.
+
+\begin{table}[htbp]
+\caption{Qualitative Examples on Test Stories}
+\label{tab:examples}
+\centering
+\scriptsize
+\begin{tabular}{lp{6.8cm}}
+\toprule
+\textbf{Ref:} & A large amount of cash has been stolen in a bank robbery in Cardiff. \\
+\textbf{Lead-1:} & A large amount of cash has been stolen in a daylight bank robbery in Cardiff. \\
+\textbf{M1:} & cash has been stolen in daylight bank robbery in cardiff south wales police \\
+\textbf{M2:} & Police have launched an investigation after money was stolen in a Cardiff bank robbery. \\
+\midrule
+\textbf{Ref:} & Lewis Hamilton stormed to pole position at the Bahrain Grand Prix. \\
+\textbf{Lead-1:} & Ferrari appeared in a position to challenge until the final laps. \\
+\textbf{M1:} & ferrari appeared in position to challenge lewis hamilton took pole \\
+\textbf{M2:} & Lewis Hamilton secured pole position for the Bahrain Grand Prix ahead of Ferrari. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+Pretrained encoder-decoder transformers (T5-small) vastly surpass extractive heuristics and recurrent models on extreme abstractive summarisation, achieving a ROUGE-1 of 34.82 and ROUGE-L of 28.15. The extreme abstractiveness of XSum renders extractive lead heuristics ineffective. Future work will explore Reinforcement Learning with Human Feedback (RLHF) and fact-checking reward models to eliminate factual hallucinations.
+
+\section*{AI Use Disclosure}
+I used Google DeepMind Antigravity AI assistant for drafting sequence-to-sequence pipeline scaffolding, implementing ROUGE evaluation metrics, and formatting the IEEE conference report. All experiments, metric calculations, qualitative audits, and written interpretations were produced, verified, and checked by me, and I take full responsibility for this work.
+
+\begin{thebibliography}{00}
+\bibitem{narayan2018} S. Narayan, S. B. Cohen, and M. Lapata, ``Don't Give Me the Details, Just the Summary! Topic-Conditioned Abstractive Summarization,'' in \textit{Proc. EMNLP}, 2018, pp. 1797--1807.
+\bibitem{raffel2020} C. Raffel \textit{et al.}, ``Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer,'' \textit{JMLR}, vol. 21, no. 140, pp. 1--67, 2020.
+\bibitem{lin2004} C.-Y. Lin, ``ROUGE: A Package for Automatic Evaluation of Summaries,'' in \textit{Proc. ACL Workshop}, 2004.
+\end{thebibliography}
+
+\end{document}
