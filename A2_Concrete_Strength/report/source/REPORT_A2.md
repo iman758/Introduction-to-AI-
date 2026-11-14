@@ -2,7 +2,7 @@
 **AI-101 Machine Learning Assignment — Pool A: Numerical Modality**  
 **The University of Lahore — Department of Intelligent Systems**  
 **Instructor:** Dr. Muhammad Awais, AI Architect  
-**Student:** [Your Name] | **Roll No.:** 70XXXXXX | **Section:** [Your Section]  
+**Student:** [Iman Fatima] | **Roll No.:** 70177713 | **Section:** [Section C]  
 **GitHub Repository:** [Repository Link]
 
 ---
