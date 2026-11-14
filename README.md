@@ -18,7 +18,7 @@
 | :---: | :---: | :---: | :--- | :---: | :---: | :---: |
 | **Pool A** | Numerical | **A2** | Concrete Compressive Strength Prediction | [A2_notebook.ipynb](A2_Concrete_Strength/A2_notebook.ipynb) | [70177713_A2_Report.pdf](A2_Concrete_Strength/report/70177713_A2_Report.pdf) | **Completed** |
 | **Pool B** | Mixed (Num + Text) | **B1** | Fraudulent Job-Posting Detection (EMSCAD) | [B1_notebook.ipynb](B1_Fake_Job_Postings/B1_notebook.ipynb) | [70177713_B1_Report.pdf](B1_Fake_Job_Postings/report/70177713_B1_Report.pdf) | **Completed** |
-| **Pool C** | Seq-to-Seq | **C2** | Abstractive News Summarisation (XSum) | [C2_notebook.ipynb](C2_News_Summarization/C2_notebook.ipynb) | [70177713_C2_Report.pdf](C2_News_Summarization/report/70177713_C2_Report.pdf) | Pending |
+| **Pool C** | Seq-to-Seq | **C2** | Abstractive News Summarisation (XSum) | [C2_notebook.ipynb](C2_News_Summarization/C2_notebook.ipynb) | [70177713_C2_Report.pdf](C2_News_Summarization/report/70177713_C2_Report.pdf) | **Completed** |
 
 ---
 
@@ -37,6 +37,8 @@ Evaluation on held-out 20% test partition (206 samples). Domain features: $w/c$ 
 * **Feature Ablation:** $w/c$ and $\log(\text{Age})$ cut Linear Regression RMSE from 9.796 to 6.573 MPa (**32.9%** reduction).
 * **Best Model:** MLPRegressor reached **5.344 MPa** (**18.7%** lower than baseline).
 
+---
+
 ### Task B1: Fraudulent Job-Posting Detection (Pool B — Mixed Modality)
 Evaluation on held-out 15% test partition (2,682 samples; 130 frauds). Extreme class imbalance: 19.65 : 1 ratio.
 
@@ -51,6 +53,20 @@ Evaluation on held-out 15% test partition (2,682 samples; 130 frauds). Extreme c
   - Text-Only: F1 = 0.8099, PR-AUC = 0.8943
   - **Combined Fusion:** F1 = **0.8365**, PR-AUC = **0.9067** (Recall raised from 75.38% to 84.62%).
 * **Best Model:** Linear SVM with modified Huber loss achieved a fraud-class F1 of **0.8760** and PR-AUC of **0.9110**.
+
+---
+
+### Task C2: Abstractive News Summarisation on XSum (Pool C — Seq-to-Seq)
+Evaluation on held-out test partition. Target: single-sentence extreme abstractive summary (82.2% novel bigrams).
+
+| System / Model | Architecture & Decoding | ROUGE-1 | ROUGE-2 | ROUGE-L | Avg. Words |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Lead-1 Baseline** | First Sentence Heuristic | 16.07 | 1.57 | 12.10 | 21.82 |
+| **Model 1: GRU Seq2Seq** | BiGRU Encoder + Bahdanau Attn + Teacher Forcing | 15.30 | 1.30 | 11.79 | 18.45 |
+| **Model 2: T5-small** | Pretrained Transformer + Beam Search ($k=4, \text{no\_rep}=3$) | **34.82** | **13.41** | **28.15** | 19.40 |
+
+* **Abstractiveness Analysis:** Human summaries feature **82.17% novel bigrams** and **94.48% novel trigrams**, explaining why extractive Lead-1 achieves a negligible ROUGE-2 of 1.57.
+* **Best Model:** T5-small outscores Lead-1 by over **+18.7 ROUGE-1** points and **+16.0 ROUGE-L** points.
 
 ---
 
@@ -92,7 +108,20 @@ AI101-ML-Assignment-70177713/
 │       └── source/
 │           ├── 70177713_B1_Report.tex <- LaTeX source code
 │           └── REPORT_B1.md           <- Markdown report version
-└── C2_News_Summarization/             <- Pool C: Sequence-to-sequence task folder
+└── C2_News_Summarization/             <- Pool C: Sequence-to-sequence task
+    ├── C2_notebook.ipynb              <- Fully executed Jupyter notebook with outputs
+    ├── figures/                       <- Generated diagnostic plots
+    │   ├── fig1_lengths.png
+    │   ├── fig2_novel_ngrams.png
+    │   ├── fig3_loss_curves.png
+    │   └── fig4_rouge_comparison.png
+    ├── data/
+    │   └── README.md                  <- XSum dataset acquisition & HuggingFace reference
+    └── report/
+        ├── 70177713_C2_Report.pdf     <- 2-page double-column IEEE report PDF
+        └── source/
+            ├── 70177713_C2_Report.tex <- LaTeX source code
+            └── REPORT_C2.md           <- Markdown report version
 ```
 
 ---
