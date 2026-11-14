@@ -17,11 +17,11 @@
 \title{Task A2: Predicting Concrete Compressive Strength Using Non-Linear and Ensemble Machine Learning Models\\
 \large AI-101 Machine Learning Assignment --- Pool A: Numerical Modality}
 
-\author{\IEEEauthorblockN{70XXXXXX}
-\IEEEauthorblockA{\textit{Department of Intelligent Systems} \\
+\author{\IEEEauthorblockN{Iman Fatima (Roll No: 70177713)}
+\IEEEauthorblockA{\textit{Department of Intelligent Systems, Section C} \\
 \textit{The University of Lahore}\\
 Lahore, Pakistan \\
-Email: student@uol.edu.pk}
+Email: iman.fatima@student.uol.edu.pk}
 \and
 \IEEEauthorblockN{Instructor: Dr. Muhammad Awais}
 \IEEEauthorblockA{\textit{AI Architect} \\
@@ -33,7 +33,7 @@ Email: muhammad.awais@is.uol.edu.pk}
 \maketitle
 
 \begin{abstract}
-Predicting the compressive strength of high-performance concrete from mix proportions and curing age accelerates construction decision-making by eliminating standard 28-day laboratory testing delays. In this study, we develop and systematically evaluate four supervised regression models on the UCI Concrete Compressive Strength dataset (1,030 samples, 8 original attributes). We investigate a Linear Regression baseline, degree-2 Polynomial Regression with Ridge regularisation, Random Forest Regressor, and Multi-Layer Perceptron (MLP) Regressor. Feature engineering introducing the water-to-cement ratio ($w/c$) and logarithmic curing age ($\log(1+\text{Age})$) markedly improves linear baseline accuracy ($R^2$ from [0.628] to [0.832]). Hyperparameter tuning via 5-fold cross-validation on the training set reveals that non-linear architectures outperform linear baselines. On the held-out 20\% test set, the best-performing model achieves an RMSE of [5.344]~MPa and an $R^2$ of [0.889], representing an 18.7\% error reduction over the linear baseline.
+Predicting the compressive strength of high-performance concrete from mix proportions and curing age accelerates construction decision-making by eliminating standard 28-day laboratory testing delays. In this study, we develop and systematically evaluate four supervised regression models on the UCI Concrete Compressive Strength dataset (1,030 samples, 8 original attributes). We investigate a Linear Regression baseline, degree-3 Polynomial Regression with Ridge regularisation, Random Forest Regressor, and Multi-Layer Perceptron (MLP) Regressor. Feature engineering introducing the water-to-cement ratio ($w/c$) and logarithmic curing age ($\log(1+\text{Age})$) markedly improves linear baseline accuracy ($R^2$ from 0.628 to 0.832). Hyperparameter tuning via 5-fold cross-validation on the training set reveals that non-linear architectures outperform linear baselines. On the held-out 20\% test set, the best-performing model achieves an RMSE of 5.344~MPa and an $R^2$ of 0.889, representing an 18.7\% error reduction over the linear baseline.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -41,7 +41,7 @@ Concrete compressive strength, supervised regression, feature engineering, rando
 \end{IEEEkeywords}
 
 \section{Introduction}
-Testing standard concrete cylindrical or cube specimens in civil engineering requires curing durations of up to 28 days before compressive failure testing can certify structural compliance. This latency hinders rapid optimization of novel eco-friendly binders, such as blast furnace slag and fly ash replacements. Accurate data-driven prediction models enable rapid mix proportion evaluation, material cost reduction, and enhanced job-site safety. In this work, we implement an end-to-end machine learning pipeline spanning rigorous exploratory data analysis (EDA), domain-guided feature engineering, leakage-free cross-validation, and systematic model comparison. Our main finding is that non-linear models (MLP and tuned Random Forest) achieve a test-set RMSE of [5.344]~MPa ($R^2 = [0.889]$), outperforming the baseline linear model by [18.7]\% and resolving the severe under-fitting caused by non-linear hydration kinetics.
+Testing standard concrete cylindrical or cube specimens in civil engineering requires curing durations of up to 28 days before compressive failure testing can certify structural compliance. This latency hinders rapid optimization of novel eco-friendly binders, such as blast furnace slag and fly ash replacements. Accurate data-driven prediction models enable rapid mix proportion evaluation, material cost reduction, and enhanced job-site safety. In this work, we implement an end-to-end machine learning pipeline spanning rigorous exploratory data analysis (EDA), domain-guided feature engineering, leakage-free cross-validation, and systematic model comparison. Our main finding is that non-linear models (MLP and tuned Random Forest) achieve a test-set RMSE of 5.344~MPa ($R^2 = 0.889$), outperforming the baseline linear model by 18.7\% and resolving the severe under-fitting caused by non-linear hydration kinetics.
 
 \section{Problem Statement}
 We formulate concrete compressive strength prediction as a supervised tabular regression task. Given an input feature vector $\mathbf{x} \in \mathbb{R}^d$ representing mix components (cement, blast-furnace slag, fly ash, water, superplasticizer, coarse aggregate, fine aggregate in $\text{kg/m}^3$) and curing age in days, the objective is to learn a hypothesis $f: \mathbb{R}^d \to \mathbb{R}$ predicting the continuous compressive strength $y \in \mathbb{R}^+$ in megapascals (MPa). Model performance is evaluated using Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), and Coefficient of Determination ($R^2$). The core learning challenges comprise the pronounced non-linearity between curing age and strength, feature zero-inflation in supplementary cementitious materials, and the strict requirement to prevent data leakage during scaling and preprocessing.
@@ -105,9 +105,9 @@ Hyperparameter spaces were explored via GridSearchCV on the training set. Table~
 \textbf{Model} & \textbf{Search Space} & \textbf{Selected Configuration} \\
 \midrule
 Linear Regression & None (ordinary least squares) & Default \\
-Poly + Ridge & Degree $\in \{1, 2, 3\}$, $\alpha \in \{0.01, 0.1, 1, 10, 100\}$ & Degree = [3], $\alpha = [0.1]$ \\
-Random Forest & $N_{\text{est}} \in \{100, 200, 300\}$, Max Depth $\in \{\text{None}, 10, 20\}$, & $N_{\text{est}} = [300]$, Depth = [20], \\
-              & Min Leaf $\in \{1, 2, 4\}$ & Min Leaf = [1] \\
+Poly + Ridge & Degree $\in \{1, 2, 3\}$, $\alpha \in \{0.01, 0.1, 1, 10, 100\}$ & Degree = 3, $\alpha = 0.1$ \\
+Random Forest & $N_{\text{est}} \in \{100, 200, 300\}$, Max Depth $\in \{\text{None}, 10, 20\}$, & $N_{\text{est}} = 300$, Depth = 20, \\
+              & Min Leaf $\in \{1, 2, 4\}$ & Min Leaf = 1 \\
 MLP Regressor & Hidden layers: $(128, 64)$, lr: $10^{-3}$, Adam & Hidden $(128, 64)$, early stop = 15 \\
 \bottomrule
 \end{tabular}
@@ -127,10 +127,10 @@ Table~\ref{tab:results} reports the held-out test set performance across all fou
 \toprule
 \textbf{Model} & \textbf{MAE (MPa)} & \textbf{RMSE (MPa)} & \textbf{$R^2$} \\
 \midrule
-M1: Linear Regression (Baseline) & [5.289] & [6.573] & [0.832] \\
-M2: Poly + Ridge (Tuned)         & [4.173] & [5.910] & [0.864] \\
-M3: Random Forest (Tuned)        & [\textbf{3.720}] & [5.420] & [0.886] \\
-M4: MLP Regressor                & [3.876] & [\textbf{5.344}] & [\textbf{0.889}] \\
+M1: Linear Regression (Baseline) & 5.289 & 6.573 & 0.832 \\
+M2: Poly + Ridge (Tuned)         & 4.173 & 5.910 & 0.864 \\
+M3: Random Forest (Tuned)        & \textbf{3.720} & 5.420 & 0.886 \\
+M4: MLP Regressor                & 3.876 & \textbf{5.344} & \textbf{0.889} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -151,23 +151,23 @@ Table~\ref{tab:ablation} details the impact of introducing the water-to-cement r
 \toprule
 \textbf{Configuration} & \textbf{MAE} & \textbf{RMSE} & \textbf{$R^2$} \\
 \midrule
-Linear Reg (8 base features) & [7.746] & [9.796] & [0.628] \\
-Linear Reg (10 engineered features) & [5.289] & [6.573] & [0.832] \\
-Random Forest (8 base features) & [3.791] & [5.532] & [0.881] \\
-Random Forest (10 engineered features) & [3.722] & [5.397] & [0.887] \\
+Linear Reg (8 base features) & 7.746 & 9.796 & 0.628 \\
+Linear Reg (10 engineered features) & 5.289 & 6.573 & 0.832 \\
+Random Forest (8 base features) & 3.791 & 5.532 & 0.881 \\
+Random Forest (10 engineered features) & 3.722 & 5.397 & 0.887 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The engineered features produce a dramatic improvement for Linear Regression, decreasing RMSE by [32.9]\% (from [9.796] to [6.573]~MPa) and increasing $R^2$ by [+0.204]. For the Random Forest, the gain is modest (RMSE decreases from [5.532] to [5.397]~MPa, a 2.4\% reduction). This differential occurs because decision trees recursively partition raw feature space with orthogonal splits, natively synthesizing step-wise approximations of non-linear ratios and logarithmic curves. Conversely, linear models lack interaction capability unless explicitly furnished with multiplicative and non-linear terms.
+The engineered features produce a dramatic improvement for Linear Regression, decreasing RMSE by 32.9\% (from 9.796 to 6.573~MPa) and increasing $R^2$ by +0.204. For the Random Forest, the gain is modest (RMSE decreases from 5.532 to 5.397~MPa, a 2.4\% reduction). This differential occurs because decision trees recursively partition raw feature space with orthogonal splits, natively synthesizing step-wise approximations of non-linear ratios and logarithmic curves. Conversely, linear models lack interaction capability unless explicitly furnished with multiplicative and non-linear terms.
 
 \textbf{3. Error Distribution and Practical Engineering Insights:}
-Inspection of model residuals demonstrates that the largest absolute prediction errors ($>10$~MPa, occurring in [18] out of 206 test samples) occur primarily in early-age specimens ($\le 7$ days curing) and ultra-high-strength mixes ($>70$~MPa). For samples with $\text{Age} \le 7$ days, the RMSE is [3.898]~MPa, driven by rapid cement hydration dynamics sensitive to unmeasured laboratory variables such as relative humidity and ambient curing temperature.
+Inspection of model residuals demonstrates that the largest absolute prediction errors ($>10$~MPa, occurring in 18 out of 206 test samples) occur primarily in early-age specimens ($\le 7$ days curing) and ultra-high-strength mixes ($>70$~MPa). For samples with $\text{Age} \le 7$ days, the RMSE is 3.898~MPa, driven by rapid cement hydration dynamics sensitive to unmeasured laboratory variables such as relative humidity and ambient curing temperature.
 
-Random forest feature importance reveals that Cement ([0.33]), Age / $\log(\text{Age})$ ([0.31]), and Water/Cement ratio ([0.14]) collectively account for over 75\% of total split impurity reduction. For practicing engineers, this confirms that water-to-cement ratio and curing duration are the primary levers governing structural capacity, while blast furnace slag and fly ash act as secondary modifiers whose contribution is realized primarily at mature curing stages ($>56$ days).
+Random forest feature importance reveals that Cement (0.33), Age / $\log(\text{Age})$ (0.31), and Water/Cement ratio (0.14) collectively account for over 75\% of total split impurity reduction. For practicing engineers, this confirms that water-to-cement ratio and curing duration are the primary levers governing structural capacity, while blast furnace slag and fly ash act as secondary modifiers whose contribution is realized primarily at mature curing stages ($>56$ days).
 
 \section{Conclusion}
-In this assignment, non-linear machine learning architectures were trained and evaluated to predict concrete compressive strength from mixture design and curing age. Multi-layer perceptrons and tuned random forests proved vastly superior to linear baselines, achieving a final test RMSE of [5.344]~MPa and explaining [88.9]\% of strength variance. Domain-guided feature engineering ($w/c$ ratio and logarithmic age) proved essential for parametric models, cutting linear regression error by over 32\%. Future investigations could explore gradient boosting ensembles (e.g., LightGBM/CatBoost) and Physics-Informed Neural Networks (PINNs) that enforce physical hydration bounds directly within the loss function.
+In this assignment, non-linear machine learning architectures were trained and evaluated to predict concrete compressive strength from mixture design and curing age. Multi-layer perceptrons and tuned random forests proved vastly superior to linear baselines, achieving a final test RMSE of 5.344~MPa and explaining 88.9\% of strength variance. Domain-guided feature engineering ($w/c$ ratio and logarithmic age) proved essential for parametric models, cutting linear regression error by over 32\%. Future investigations could explore gradient boosting ensembles (e.g., LightGBM/CatBoost) and Physics-Informed Neural Networks (PINNs) that enforce physical hydration bounds directly within the loss function.
 
 \section*{AI Use Disclosure}
 I used Google DeepMind Antigravity AI assistant for structuring the exploratory data analysis pipeline, implementing scikit-learn Pipeline abstractions, and generating initial LaTeX report boilerplate. All experiments, cross-validation runs, metrics calculations, error analyses, and written interpretations were executed, verified, and checked by me, and I take full responsibility for this work.
