@@ -1,0 +1,28 @@
+# ── Datasets & large model files ──────────────────────────────────
+data/
+*.xls
+*.xlsx
+*.csv
+*.zip
+*.h5
+*.pt
+*.pkl
+*.joblib
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env/
+*.egg-info/
+dist/
+build/
+
+# ── Jupyter ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── OS ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
